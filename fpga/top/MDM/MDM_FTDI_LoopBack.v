@@ -72,7 +72,7 @@ module MDM_FTDI_LoopBack #(
       // ASK output port
       .ask_tx(ask_tx)
    );
-   assign MULP = ask_tx[0];
-   assign MULN = ask_tx[1];
+   assign MULP = ( ask_tx==2'b01 ? 1'b1 : 1'b0 );
+   assign MULN = ( ask_tx==2'b11 ? 1'b1 : 1'b0 );
 
 endmodule // MDM_FTDI_LoopBack

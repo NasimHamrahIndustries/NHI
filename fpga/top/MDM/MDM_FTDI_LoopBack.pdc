@@ -29,13 +29,13 @@ set_io UART_RX \
 
 # Intermediate Frequency Modulation
 set_io MULP \
-   -pinname 6 \
+   -pinname 5 \
    -fixed yes \
    -DIRECTION Output \
    -iostd LVCMOS33;    # MULP
 
 set_io MULN \
-   -pinname 5 \
+   -pinname 6 \
    -fixed yes \
    -DIRECTION Output \
    -iostd LVCMOS33;    # MULN
