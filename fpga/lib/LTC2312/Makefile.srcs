@@ -1,0 +1,11 @@
+#
+# Copyright 2020 Nasim Hamrah Industries
+#
+
+##################################################
+# LTC2312 Sources
+##################################################
+LTC2312_SRCS = $(abspath $(addprefix $(BASE_DIR)/../lib/LTC2312/, \
+LTC2312_tb.v \
+LTC2312.v \
+))
