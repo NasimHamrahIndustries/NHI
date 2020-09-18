@@ -32,7 +32,7 @@ SDO   __X--------HI-Z STATE------X_B13_X_B12_X_B11_X_B10_X_B09_X_B08_X_B07_X_B06
 */
    reg CONV_reg = 1'b1;
    localparam max_count = clk_freq/sample_rate;
-   reg unsigned [$clog2(max_count)-1:0] count = $unsigned(max_count-1);
+   reg [$clog2(max_count)-1:0] count = (max_count-1);
    always @(posedge clk)
       if(rst)
          count <= $unsigned(max_count-1);
