@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 print("In the Name of ALLAH")
 print("Universal Asynchronous Receiver Transmitter UART Ploter:")
 
-def LTC2312SerialReceiver(port, baudrate, SampleNumber):
+def LTC2312SerialReceiver(port, baudrate, SampleNumber, Precision):
     ser=serial.Serial()
     ser.port = port
     ser.baudrate = baudrate
@@ -40,14 +40,14 @@ def LTC2312SerialReceiver(port, baudrate, SampleNumber):
     ii0 = int.from_bytes(ri, byteorder='big')
     ri = ser.read()
     ii1 = int.from_bytes(ri, byteorder='big')
-    LTC2312=[float(ii0)+float(ii1)*2^8]
+    LTC2312=[Precision*float(ii1+ii0*(2**8))]
     i=i+1
     while ( i < SampleNumber ) :
         ri = ser.read()
         ii0 = int.from_bytes(ri, byteorder='big')
         ri = ser.read()
         ii1 = int.from_bytes(ri, byteorder='big')
-        LTC2312.append(float(ii0)+float(ii1)*2^8)
+        LTC2312.append(Precision*float(ii1+ii0*(2**8)))
         i=i+1
     ser.close()
     return LTC2312
@@ -60,7 +60,7 @@ baudrateValue = 80000
 SampleRate=200000
 SampleNumber=2048
 TimeStep=1/SampleRate
-ADCPrecision=5/(2^14)
+ADCPrecision=2.048/(2**14)
 
 i=0
 TimeSteps=[float(0)]
@@ -72,10 +72,11 @@ while (i<SampleNumber-1):
     SinusoidalWaveTest.append(numpy.sin(2.0*numpy.pi*freTest*TimeSteps[i]))
     freTest=freTest*1.001
 
+LTC2312=LTC2312SerialReceiver(portName, baudrateValue, SampleNumber, ADCPrecision)
 
-plt.plot(TimeSteps, SinusoidalWaveTest)
-plt.plot(TimeSteps, SinusoidalWaveTest, 'go')
-plt.ylabel('ADC Values')
+plt.plot(TimeSteps, LTC2312)
+plt.plot(TimeSteps, LTC2312, 'go')
+plt.ylabel('ADC Values (Volt)')
 plt.xlabel('Time (Second)')
 plt.grid()
 plt.show()

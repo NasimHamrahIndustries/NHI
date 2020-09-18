@@ -3,7 +3,7 @@
 
 # Clock pin
 set_io CLOCK \
-   -pinname 100 \
+   -pinname 65 \
    -fixed yes \
    -DIRECTION Input \
    -iostd LVCMOS33;    # 4MHz or 8MHz on-board clock
