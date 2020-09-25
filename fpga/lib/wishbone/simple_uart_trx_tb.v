@@ -5,11 +5,15 @@
 //
 
 `timescale 1ns / 1ps
-module simple_uart_trx_tb();
+module simple_uart_trx_tb #(
+   parameter clk_freq = 4000000,          // Hz
+   parameter uart_rate = 125000           // bit per second
+);
+   localparam [31:0] clk_period=1000000000.0/$itor(clk_freq); // ps
    reg clk = 1'b0;
    wire rst;
    always @(*) begin
-     #62.5
+     #(clk_period/2);
      clk <= ~clk;
    end
 
@@ -17,12 +21,15 @@ module simple_uart_trx_tb();
 
    wire trxline;
 
+   // UART TX
+   localparam TX_SIZE = 10;
+   localparam clkdiv_tx= clk_freq/uart_rate;
    reg [7:0] i_tdata;
    reg i_tvalid = 1'b0;
    wire i_tready;
    axis_uart_tx_wrapper #(
-      .TX_SIZE(4),
-      .clkdiv_tx(100)
+      .TX_SIZE(TX_SIZE),
+      .clkdiv_tx(clkdiv_tx)
    ) axis_uart_tx_wrapper (
       .clk(clk), .rst(rst),
       // AXI Stream ports
@@ -34,58 +41,61 @@ module simple_uart_trx_tb();
    );
 
    always @(*) begin
-      #5250
+      #(clk_period*40)
       if(~rst) begin
-         #13;
-         #5250;
+         #(clk_period/13);
+         #(clk_period*10);
          //
          i_tdata <= 8'b01010101;
          i_tvalid <= 1'b1;
-         #125;
+         #clk_period;
          i_tdata <= 8'b01010101;
-         #125;
+         #clk_period;
          i_tdata <= 8'b01010101;     
-         #125;
+         #clk_period;
          i_tdata <= 8'b00000000;
-         #125;
+         #clk_period;
          i_tdata <= 8'b10101010;
-         #125;
+         #clk_period;
          i_tdata <= 8'b11111111;
-         #125;
+         #clk_period;
          i_tdata <= 8'b01010011;
-         #125;
+         #clk_period;
          i_tdata <= 8'b11001010;
-         #125;
+         #clk_period;
          i_tdata <= 8'b01011010;
-         #125;
+         #clk_period;
          i_tdata <= 8'b10100101;
-         #125;
+         #clk_period;
          i_tdata <= 8'b01010101;
-         #125;
+         #clk_period;
          i_tdata <= 8'b01010101;     
-         #125;
+         #clk_period;
          i_tdata <= 8'b00000000;
-         #125;
+         #clk_period;
          i_tdata <= 8'b10101010;
-         #125;
+         #clk_period;
          i_tdata <= 8'b11111111;
-         #125;
+         #clk_period;
          i_tdata <= 8'b01010011;
-         #125;
+         #clk_period;
          i_tdata <= 8'b00011000;
-         #125;
+         #clk_period;
          i_tvalid <= 1'b0;
-         #525000;
+         #(clk_period*10);
          //
       end
    end
 
+   // UART RX
+   localparam RX_SIZE = 10;
+   localparam clkdiv_rx = clk_freq/uart_rate;
    wire [7:0] o_tdata;
    wire o_tvalid;
    reg o_tready = 1'b0;
    axis_uart_rx_wrapper #(
-      .RX_SIZE(4),
-      .clkdiv_rx(100)
+      .RX_SIZE(RX_SIZE),
+      .clkdiv_rx(clkdiv_rx)
    ) axis_uart_rx_wrapper (
       .clk(clk), .rst(rst),
       // AXI Stream ports
@@ -96,10 +106,10 @@ module simple_uart_trx_tb();
       .rx(trxline)
    );
    always @(*) begin
-      #5250
+      #(clk_period*40)
       if(~rst) begin
-         #13;
-         #52500;
+         #(clk_period/13);
+         #(clk_period*100);
          o_tready <= 1'b1;
       end
    end
