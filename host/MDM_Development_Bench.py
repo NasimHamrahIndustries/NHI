@@ -24,12 +24,13 @@ import matplotlib.pyplot as plt
 
 portName = '/dev/ttyUSB0'
 baudrateValue = 125000
+Vmax=2.048
 MDM_Development_Bench_Arch="""
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Commands:                                                                  //        _________                 _                                        //
 // reset : Reset registers to default values and states                      //       |         |  ask counter  | \      _______                          //
 // set_offset VALUE : e.g. set_offset 0.64                                   //       | Counter |===============|  \    |       |                         //
-// set_offset cal : Calculate offset value in Auto Offset Cutter block       //       |_________|               |   |   |       |--> MULP    _   _        //
+// cal_offset : Calculate offset value in Auto Offset Cutter block           //       |_________|               |   |   |       |--> MULP    _   _        //
 // offset manu/auto : Set mux stream direction                               //      set_ask VALUE              |   |   |  ASK  |           | | | |       //
 // set_threshold VALUE : e.g. set_threshold 1.25                             //         {0:0>8b} ===============|   |===|       |        ---' | | | ,---  //
 // capture manu/auto/filtered/cutted_offset/adc : Set mux stream direction   //                      ask value  |   |   | 5kb/s |             |_| |_|     //
@@ -55,14 +56,34 @@ MDM_Development_Bench_Arch="""
 // CONV <--|     |  |     | Cutter |               |_/    |                  |                                |      |   |__/                             //
 //         |_____|  |     |________|              {offset_mux:^4}    |                  O================================|      |  2048 sample                       //
 //                  |         |                           |                                 capture filtered  |      |                                    //
-//                  |   set_offset cal                    O===================================================|      |                                    //
+//                  |     cal_offset                      O===================================================|      |                                    //
 //                  |                                                                  capture cutted_offset  |     /                                     //
 //                  O=========================================================================================|    /                                      //
 //                                                                                               capture adc  |   /                                       //
 //                                                                                                            |__/                                        //
-//                                                                                                    {captura_mux:^20}                                //
+//                                                                                                    {capture_mux:^20}                                //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 """
+'''
+//Instructions:
+// command_type  argument       Byte0 Byte1 Byte2
+// reset                        h00   h00   h00
+// set_offset    fx.xx          h01   hXX   hXX
+// cal_offset                   h02   h00   h00
+// offset        manu           h03   h00   h00
+//               auto           h03   h01   h00
+// set_threshold fx.xx          h04   hXX   hXX
+// capture       adc            h05   h00   h00
+//               cutted_offset  h05   h01   h00
+//               filtered       h05   h02   h00
+//               auto           h05   h03   h00
+//               manu           h05   h04   h00
+//               fire           h05   h05   h00
+// ask           off            h06   h00   h00
+//               value          h06   h01   h00
+//               counter        h06   h02   h00
+// set_ask       dxxx           h07   hXX   h00
+'''
 
 def main():
     print("In the Name of ALLAH")
@@ -71,68 +92,154 @@ def main():
     offset_value=0.0
     threshold_value=0.0
     offset_mux='manu'
-    captura_mux='adc'
-    reset()
+    capture_mux='adc'
+    reset(' ')
     while 'true':
         print("MDM Development Bench:")
-        print(MDM_Development_Bench_Arch.format(ask_value, offset_value, threshold_value, ask_mux=ask_mux, offset_mux=offset_mux, captura_mux=captura_mux))
-        command = input("Please inter your command:\n")
+        print(MDM_Development_Bench_Arch.format(ask_value, threshold_value, offset_value, ask_mux=ask_mux, offset_mux=offset_mux, capture_mux=capture_mux))
+        command = input("Please enter your command:\n")
         separated_command=command.partition(' ')
         command_type=separated_command[0]
-        command=separated_command[2]
+        argument=separated_command[2]
         del separated_command
         if(command_type=="reset"):
             clear()
-            reset()
+            reset(argument)
         elif(command_type=="set_offset"):
             clear()
-            set_offset()
+            val=set_offset(argument)
+            if(val!='false'):
+                offset_value=val
+        elif(command_type=="cal_offset"):
+            clear()
+            cal_offset(argument)
         elif(command_type=="offset"):
             clear()
-            offset()
+            val=offset(argument)
+            if(val!='false'):
+                offset_mux=val
         elif(command_type=="set_threshold"):
             clear()
-            set_threshold()
+            val=set_threshold(argument)
+            if(val!='false'):
+                threshold_value=val
         elif(command_type=="capture"):
             clear()
-            capture()
+            val=capture(argument)
+            if(val!='false' and val!='fire'):
+                capture_mux=val
         elif(command_type=="ask"):
             clear()
-            ask()
+            val=ask(argument)
+            if(val!='false'):
+                ask_mux=val
         elif(command_type=="set_ask"):
             clear()
-            set_ask()
+            val=set_ask(argument)
+            if(val!='false'):
+                ask_value=val
         elif(command_type=="exit"):
             clear()
             break
         else:
             clear()
+            print(command_type, argument)
             print("Irregular command!")
 
 # define clear function 
 def clear():
     os.system('clear')
 
-def reset():
-    print("reset!")
+def reset(argument):
+    print("reset", argument)
 
-def set_offset():
-    print("set_offset!")
+def set_offset(argument):
+    print("set_offset", argument)
+    if(0.0<=float(argument) and float(argument)<=Vmax):
+        print("Done successfully!")
+        return float(argument)
+    else:
+        print("Command argument should be a float number in range: 0.0 <= argument and argument <=", Vmax, "!")
+        print("Irregular command!")
+        return 'false'
 
-def offset():
-    print("offset!")
+def cal_offset(argument):
+    print("cal_offset", argument)
+    print("Done successfully!")
 
-def set_threshold():
-    print("set_threshold!")
+def offset(argument):
+    print("offset", argument)
+    if(argument=="manu"):
+        print("Done successfully!")
+        return argument
+    elif(argument=="auto"):
+        print("Done successfully!")
+        return argument
+    else:
+        print("Command argument should be : manu or auto !")
+        print("Irregular command!")
+        return 'false'
 
-def capture():
-    print("capture!")
+def set_threshold(argument):
+    print("set_threshold", argument)
+    if(0.0<=float(argument) and float(argument)<=Vmax):
+        print("Done successfully!")
+        return float(argument)
+    else:
+        print("Command argument should be a float number in range: 0.0 <= argument and argument <=", Vmax, "!")
+        print("Irregular command!")
+        return 'false'
 
-def ask():
-    print("ask!")
+def capture(argument):
+    print("capture", argument)
+    if(argument=="adc"):
+        print("Done successfully!")
+        return argument
+    elif(argument=="cutted_offset"):
+        print("Done successfully!")
+        return argument
+    elif(argument=="filtered"):
+        print("Done successfully!")
+        return argument
+    elif(argument=="auto"):
+        print("Done successfully!")
+        return argument
+    elif(argument=="manu"):
+        print("Done successfully!")
+        return argument
+    elif(argument=="fire"):
+        print("Done successfully!")
+        return 'fire'
+    else:
+        print("Command argument should be : manu, auto, filtered, cutted_offset, adc or fire !")
+        print("Irregular command!")
+        return 'false'
 
-def set_ask():
-    print("set_ask!")
+def ask(argument):
+    print("ask", argument)
+    if(argument=="counter"):
+        print("Done successfully!")
+        return argument
+    elif(argument=="value"):
+        print("Done successfully!")
+        return argument
+    elif(argument=="off"):
+        print("Done successfully!")
+        return argument
+    else:
+        print("Command argument should be : counter, value or off !")
+        print("Irregular command!")
+        return 'false'
+
+def set_ask(argument):
+    print("set_ask", argument)
+    if(0<=int(argument) and int(argument)<=255):
+        print("Done successfully!")
+        return int(argument)
+    else:
+        print("Command argument should be a integer number in range: 0 <= argument and argument <= 255 !")
+        print("Irregular command!")
+        return 'false'
 
 if __name__ == '__main__':
     main()
