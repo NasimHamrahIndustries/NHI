@@ -8,14 +8,13 @@
 
 module BoundedIntegrator #(
    parameter WIDTH = 16,
-   parameter SIZE = 5,                 // 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 ...
-   parameter LogTow_SIZE_PlusOne = 3   // 1 2 2 3 3 3 3 4 4 4  4  4  4  4  4  5  5  5  5  ...
+   parameter SIZE = 5
 )(
    input clk, input reset, input clear,
    input [WIDTH-1:0] i_tdata,
    input i_tvalid,
    output i_tready,
-   output [WIDTH+LogTow_SIZE_PlusOne-1:0] o_tdata,
+   output [WIDTH+$clog2(SIZE+1)-1:0] o_tdata,
    output o_tvalid,
    input o_tready
 );
@@ -38,7 +37,7 @@ module BoundedIntegrator #(
       end
    endgenerate
 
-   reg signed [WIDTH+LogTow_SIZE_PlusOne-1:0] BoundedIntegral;
+   reg signed [WIDTH+$clog2(SIZE+1)-1:0] BoundedIntegral;
    always @(posedge  clk)
       if(reset | clear)
          BoundedIntegral <= 0;

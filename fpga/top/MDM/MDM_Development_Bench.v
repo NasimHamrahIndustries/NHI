@@ -8,7 +8,8 @@ module MDM_Development_Bench #(
    parameter clk_freq = 4000000,           // Hz
    parameter uart_rate = 125000,           // bit per second
    parameter ask_rate = 5000,              // bit per second
-   parameter LTC2312_sample_rate = 200000  // sample per second
+   parameter LTC2312_sample_rate = 200000, // sample per second
+   parameter LTC2312_precision = 14        // output bit length
 )(
    // Clock and Reset Pins
    input CLOCK, //input RESET_N,
@@ -26,8 +27,9 @@ module MDM_Development_Bench #(
 
    wire rst;
    reg cmd_rst = 1'b0;
-   por_gen por_gen (
+   controlled_por_gen controlled_por_gen (
       .clk(CLOCK),
+      .reset(cmd_rst),
       .reset_out(rst)
    );
 
@@ -148,10 +150,10 @@ module MDM_Development_Bench #(
    //
    ////////////////////////////////
    // LTC2312 ADC chip
-   wire [13:0] LTC2312_tdata;
+   wire [LTC2312_precision-1:0] LTC2312_tdata;
    wire LTC2312_tvalid;
    LTC2312 #(
-      .WIDTH(14),
+      .WIDTH(LTC2312_precision),
       .clk_freq(clk_freq),
       .sample_rate(LTC2312_sample_rate)
    ) LTC2312 (
@@ -170,6 +172,28 @@ module MDM_Development_Bench #(
    //
    ////////////////////////////////
 
+   // Filter Integrator
+   parameter Integrator_SIZE = LTC2312_sample_rate/(2*ask_rate);
+   wire [LTC2312_precision:0] i_Integrator_date;
+   wire i_Integrator_valid, i_Integrator_ready;
+   wire [LTC2312_precision+$clog2(Integrator_SIZE+1):0] o_Integrator_date;
+   wire o_Integrator_valid, o_Integrator_ready;
+   BoundedIntegrator #(
+      .WIDTH(LTC2312_precision+1),
+      .SIZE(Integrator_SIZE)
+   ) BoundedIntegrator (
+      .clk(CLOCK), .reset(rst), .clear(1'b0),
+      .i_tdata(i_Integrator_date),
+      .i_tvalid(i_Integrator_valid),
+      .i_tready(i_Integrator_ready),
+      .o_tdata(o_Integrator_date),
+      .o_tvalid(o_Integrator_valid),
+      .o_tready(o_Integrator_ready)
+   );
+   assign i_Integrator_date = {1'b0, LTC2312_tdata};
+   assign i_Integrator_valid = LTC2312_tvalid;
+   //assign  = i_Integrator_ready;
+   assign o_Integrator_ready = 1'b1;
 
    ////////////////////////////////
    //
@@ -206,15 +230,15 @@ module MDM_Development_Bench #(
                   FIFO_DATA <= {2'b00, LTC2312_tdata};
                   FIFO_WE   <= LTC2312_tvalid;
                end
-            /*8'h01     : begin // cutted_offset
-                  FIFO_DATA <= ;
-                  FIFO_WE   <= ;
+            8'h01     : begin // cutted_offset
+                  FIFO_DATA <= {1'b0, i_Integrator_date};
+                  FIFO_WE   <= i_Integrator_valid;
                end
             8'h02     : begin // filtered
-                  FIFO_DATA <= ;
-                  FIFO_WE   <= ;
+                  FIFO_DATA <= o_Integrator_date[LTC2312_precision+$clog2(Integrator_SIZE+1):LTC2312_precision+$clog2(Integrator_SIZE+1)-16+1];
+                  FIFO_WE   <= o_Integrator_valid;
                end
-            8'h03     : begin // auto
+            /*8'h03     : begin // auto
                   FIFO_DATA <= ;
                   FIFO_WE   <= ;
                end

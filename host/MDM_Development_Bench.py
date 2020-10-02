@@ -327,8 +327,8 @@ def fire_ploter(port, baudrate, SampleNumber, Precision):
         i=i+1
         SinusoidalWaveTest.append(numpy.sin(2.0*numpy.pi*freTest*TimeSteps[i]))
         freTest=freTest*1.001
-    plt.plot(TimeSteps, SinusoidalWaveTest)
-    plt.plot(TimeSteps, SinusoidalWaveTest, 'go')
+    plt.plot(TimeSteps, sample_received)
+    plt.plot(TimeSteps, sample_received, 'go')
     plt.ylabel('ADC Values (Volt)')
     plt.xlabel('Time (Second)')
     plt.grid()
