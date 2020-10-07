@@ -28,8 +28,7 @@ module BoundedIntegrator_tb ();
    reg BoundedIntegrator_tready = 1'b1;
    BoundedIntegrator #(
       .WIDTH(WIDTH),
-      .SIZE(SIZE),
-      .LogTow_SIZE_PlusOne(LogTow_SIZE_PlusOne)
+      .SIZE(SIZE)
    ) BoundedIntegrator (
       .clk(clk), .reset(rst), .clear(clear),
       .i_tdata(i_tdata),
@@ -38,6 +37,22 @@ module BoundedIntegrator_tb ();
       .o_tdata(BoundedIntegrator_tdata),
       .o_tvalid(BoundedIntegrator_tvalid),
       .o_tready(BoundedIntegrator_tready)
+   );
+
+   wire [WIDTH+LogTow_SIZE_PlusOne-1:0] DirectBoundedIntegrator_tdata;
+   wire DirectBoundedIntegrator_tvalid;
+   reg DirectBoundedIntegrator_tready = 1'b1;
+   DirectBoundedIntegrator #(
+      .WIDTH(WIDTH),
+      .SIZE(SIZE)
+   ) DirectBoundedIntegrator (
+      .clk(clk), .reset(rst), .clear(clear),
+      .i_tdata(i_tdata),
+      .i_tvalid(i_tvalid),
+      .i_tready(i_tready),
+      .o_tdata(DirectBoundedIntegrator_tdata),
+      .o_tvalid(DirectBoundedIntegrator_tvalid),
+      .o_tready(DirectBoundedIntegrator_tready)
    );
 
    wire [WIDTH-1:0] SumDelayFilter_tdata;

@@ -107,6 +107,12 @@ def main():
         argument=separated_command[2]
         del separated_command
         if(command_type=="reset"):
+            offset_value=0.0
+            offset_mux='manu'
+            threshold_value=0.0
+            capture_mux='adc'
+            ask_value=0
+            ask_mux='off'
             clear()
             reset(argument)
         elif(command_type=="set_offset"):
