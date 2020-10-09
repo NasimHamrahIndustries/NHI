@@ -178,7 +178,7 @@ module MDM_Development_Bench #(
    ////////////////////////////////
 
    // Filter Integrator
-   parameter Integrator_SIZE = LTC2312_sample_rate/(2*ask_rate);
+   localparam Integrator_SIZE = LTC2312_sample_rate/(2*ask_rate);
    // Integrator0
    wire [LTC2312_precision:0] i_Integrator0_date;
    wire i_Integrator0_valid, i_Integrator0_ready;
