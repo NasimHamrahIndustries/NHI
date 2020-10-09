@@ -5,19 +5,24 @@
 //
 
 `timescale 1ns / 1ps
-module simple_ask_uart_tx_tb();
-   parameter ask_tx_length_model = 8;
-   parameter TX_SIZE = 4;
-   parameter clkdiv_tx = 100;
+module simple_ask_uart_tx_tb #(
+   parameter clk_freq = 4000000,          // Hz
+   parameter uart_rate = 125000           // bit per second
+);
+   parameter [31:0] clk_period=1000000000.0/$itor(clk_freq);
+   parameter clkdiv = clk_freq/uart_rate;
+   parameter TX_SIZE = 6;
+   parameter RX_SIZE = 2;
    reg clk = 1'b0;
    wire rst;
-   always @(*) begin // 8 MHz
-     #62.5
+   always @(*) begin
+     #(clk_period/2);
      clk <= ~clk;
    end
 
    por_gen por_gen (.clk(clk), .reset_out(rst) );
 
+   parameter ask_tx_length_model = 8;
    wire [1:0] ask_tx;
    wire [ask_tx_length_model-1:0] ask_tx_model;
    wire tx;
@@ -30,7 +35,7 @@ module simple_ask_uart_tx_tb();
       .ask_core_type("simple"),
       .ask_tx_length(2),
       .TX_SIZE(TX_SIZE),
-      .clkdiv_tx(clkdiv_tx)
+      .clkdiv_tx(clkdiv)
    ) simple_axis_ask_uart_tx_wrapper (
       .clk(clk), .rst(rst),
       // AXI Stream ports
@@ -45,74 +50,72 @@ module simple_ask_uart_tx_tb();
       .ask_core_type("model"),
       .ask_tx_length(ask_tx_length_model),
       .TX_SIZE(TX_SIZE),
-      .clkdiv_tx(clkdiv_tx)
+      .clkdiv_tx(clkdiv)
    ) model_axis_ask_uart_tx_wrapper (
       .clk(clk), .rst(rst),
       // AXI Stream ports
       .i_tdata(i_tdata),
       .i_tvalid(i_tvalid),
-      .i_tready(i_tready_ask),
+      .i_tready(),
       // ASK output port
       .ask_tx(ask_tx_model)
    );
 
-   wire i_tready_uart;
    axis_uart_tx_wrapper #(
       .TX_SIZE(TX_SIZE),
-      .clkdiv_tx(clkdiv_tx)
+      .clkdiv_tx(clkdiv)
    ) axis_uart_tx_wrapper (
       .clk(clk), .rst(rst),
       // AXI Stream ports
       .i_tdata(i_tdata),
       .i_tvalid(i_tvalid),
-      .i_tready(i_tready_uart),
+      .i_tready(),
       // Output TX port
       .tx(tx)
    );
 
    always @(*) begin
-      #5250
+      #(clk_period*313);
       if(~rst) begin
-         #13;
-         #5250;
+         #(clk_period*110);
          //
          i_tdata <= 8'b01010101;
          i_tvalid <= 1'b1;
-         #125;
+         #clk_period;
          i_tdata <= 8'b01010101;
-         #125;
+         #clk_period;
          i_tdata <= 8'b01010101;     
-         #125;
+         #clk_period;
          i_tdata <= 8'b00000000;
-         #125;
+         #clk_period;
          i_tdata <= 8'b10101010;
-         #125;
+         #clk_period;
          i_tdata <= 8'b11111111;
-         #125;
+         #clk_period;
          i_tdata <= 8'b01010011;
-         #125;
+         #clk_period;
          i_tdata <= 8'b11001010;
-         #125;
+         #clk_period;
          i_tdata <= 8'b01011010;
-         #125;
+         #clk_period;
          i_tdata <= 8'b10100101;
-         #125;
+         #clk_period;
          i_tdata <= 8'b01010101;
-         #125;
+         #clk_period;
          i_tdata <= 8'b01010101;     
-         #125;
+         #clk_period;
          i_tdata <= 8'b00000000;
-         #125;
+         #clk_period;
          i_tdata <= 8'b10101010;
-         #125;
+         #clk_period;
          i_tdata <= 8'b11111111;
-         #125;
+         #clk_period;
          i_tdata <= 8'b01010011;
-         #125;
+         #clk_period;
          i_tdata <= 8'b00011000;
-         #125;
+         #clk_period;
          i_tvalid <= 1'b0;
-         #525000;
+         #(clk_period*110);
          //
       end
    end
@@ -120,58 +123,59 @@ module simple_ask_uart_tx_tb();
    wire [ask_tx_length_model-1:0] ask_rx_model;
    assign ask_rx_model = ( ask_tx_model[ask_tx_length_model-1]==1'b0 ? ask_tx_model : 0 );
 
-   wire [ask_tx_length_model-1:0] DelayFilterOut;
-   parameter DelaySIZE = 5;
-   parameter TowPowSIZE = 32;
-   reg [DelaySIZE-1:0] sel_data = 5'b00000;
-   DelayFilter #(
-      .WIDTH(ask_tx_length_model),
-      .SIZE(DelaySIZE),
-      .TowPowSIZE(TowPowSIZE)
-   ) DelayFilter (
-      .clk(clk), .reset(rst), .clear(1'b0),
-      .i_tdata(ask_rx_model),
-      .i_tvalid(1'b1),
-      .i_tready(),
-      .o_tdata(DelayFilterOut),
-      .o_tvalid(),
-      .o_tready(1'b1),
-      .sel_data(sel_data),
-      .sel_valid(1'b1)
-   );
-
-   wire [ask_tx_length_model-1:0] SumDelayFilter_tdata;
-   SumDelayFilter #(
-      .WIDTH(ask_tx_length_model),
-      .SIZE(5),        // 1 2 3 4  5  6  7   ...
-      .TowPowSIZE(32), // 2 4 8 16 32 64 128 ...
-      .DelaySelector(24)
-   ) SumDelayFilter (
-      .clk(clk), .reset(rst), .clear(1'b0),
-      .i_tdata(ask_rx_model),
-      .i_tvalid(1'b1),
-      .i_tready(),
-      .o_tdata(SumDelayFilter_tdata),
-      .o_tvalid(),
-      .o_tready(1'b1)
-   );
-
-
-   parameter SIZE = 49;                 // 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 8 17 18 19 ...
-   parameter LogTow_SIZE_PlusOne = 6;   // 1 2 2 3 3 3 3 4 4 4  4  4  4  4  4  5  5  5  5  ...
-   wire [ask_tx_length_model+LogTow_SIZE_PlusOne-1:0] BoundedIntegratorOut;
+   parameter SIZE = (clkdiv/2)-3;
+   wire [ask_tx_length_model+$clog2(SIZE+1)-1:0] BoundedIntegratorOut;
+   wire BoundedIntegratorOut_valid;
    BoundedIntegrator #(
       .WIDTH(ask_tx_length_model),
-      .SIZE(SIZE),
-      .LogTow_SIZE_PlusOne(LogTow_SIZE_PlusOne)
+      .SIZE(SIZE)
    ) BoundedIntegrator (
       .clk(clk), .reset(rst), .clear(1'b0),
       .i_tdata(ask_rx_model),
       .i_tvalid(1'b1),
       .i_tready(),
       .o_tdata(BoundedIntegratorOut),
-      .o_tvalid(),
+      .o_tvalid(BoundedIntegratorOut_valid),
       .o_tready(1'b1)
+   );
+   wire [ask_tx_length_model+$clog2(SIZE+1)-1:0] DirectBoundedIntegratorOut;
+   wire DirectBoundedIntegratorOut_valid;
+   DirectBoundedIntegrator #(
+      .WIDTH(ask_tx_length_model),
+      .SIZE(SIZE)
+   ) DirectBoundedIntegrator (
+      .clk(clk), .reset(rst), .clear(1'b0),
+      .i_tdata(ask_rx_model),
+      .i_tvalid(1'b1),
+      .i_tready(),
+      .o_tdata(DirectBoundedIntegratorOut),
+      .o_tvalid(DirectBoundedIntegratorOut_valid),
+      .o_tready(1'b1)
+   );
+
+   wire rx;
+   manual_threshold_ask_detector #(
+      .WIDTH(ask_tx_length_model+$clog2(SIZE+1)-1)
+   ) manual_threshold_ask_detector (
+      .clk(clk), .reset(rst), .clear(1'b0), .enable(1'b1),
+      .i_tdata(DirectBoundedIntegratorOut), .i_tvalid(DirectBoundedIntegratorOut_valid), .i_tready(),
+      .upthreshold($signed(501)), .downthreshold($signed(139)),
+      .rx(rx)
+   );
+
+   // UART RX
+   wire [7:0] o_tdata;
+   axis_uart_rx_wrapper #(
+      .RX_SIZE(RX_SIZE),
+      .clkdiv_rx(clkdiv)
+   ) axis_uart_rx_wrapper (
+      .clk(clk), .rst(rst),
+      // AXI Stream ports
+      .o_tdata(o_tdata),
+      .o_tvalid(),
+      .o_tready(1'b1),
+      // Input RX port
+      .rx(rx)
    );
 
 endmodule // simple_ask_uart_tx_tb

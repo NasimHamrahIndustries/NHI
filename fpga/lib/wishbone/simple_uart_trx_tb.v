@@ -9,7 +9,7 @@ module simple_uart_trx_tb #(
    parameter clk_freq = 4000000,          // Hz
    parameter uart_rate = 125000           // bit per second
 );
-   localparam [31:0] clk_period=1000000000.0/$itor(clk_freq); // ps
+   localparam [31:0] clk_period=1000000000.0/$itor(clk_freq);
    reg clk = 1'b0;
    wire rst;
    always @(*) begin

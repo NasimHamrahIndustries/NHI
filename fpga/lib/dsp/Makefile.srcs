@@ -9,5 +9,7 @@ DSP_SRCS = $(abspath $(addprefix $(BASE_DIR)/../lib/dsp/, \
 BoundedIntegrator.v \
 BoundedIntegrator_tb.v \
 DelayFilter.v \
+DirectBoundedIntegrator.v \
+PyramidSum.v \
 SumDelayFilter.v \
 ))
