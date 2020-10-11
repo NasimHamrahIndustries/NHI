@@ -22,7 +22,10 @@ import serial
 import numpy
 import matplotlib.pyplot as plt
 
-portName = '/dev/ttyUSB0'
+if(os.name=='nt'):
+    portName = 'COM1'
+else:
+    portName = '/dev/ttyUSB0'
 baudrateValue = 125000
 askrateValue = 5000
 Vmax=2.048
@@ -180,7 +183,10 @@ def main():
 
 # define clear function 
 def clear():
-    os.system('clear')
+    if(os.name=='nt'):
+        os.system('cls')
+    else:
+        os.system('clear')
 
 def reset(argument):
     print("reset", argument)
@@ -329,7 +335,7 @@ def capture(argument, capture_mux):
     elif(argument=="fire"):
         print("capture fire")
         serial_commander(portName, baudrateValue, int(10), int(0), int(0))
-        if(capture_mux=='a' and capture_mux=='b'):
+        if(capture_mux=='a' or capture_mux=='b'):
             fire_ploter(portName, baudrateValue, SampleNumber, 1)
         elif(capture_mux=='c'):
             fire_ploter(portName, baudrateValue, SampleNumber, 8*ADCPrecision)
