@@ -24,11 +24,15 @@ import matplotlib.pyplot as plt
 
 portName = '/dev/ttyUSB0'
 baudrateValue = 125000
+askrateValue = 5000
 Vmax=2.048
 SampleRate = 200000  # sample per second
 SampleNumber=2048
 TimeStep=1/SampleRate
-ADCPrecision=Vmax/(2**14)
+ADClength=14
+ADCPrecision=Vmax/(2**ADClength)
+IntegratorWindow=SampleRate/(askrateValue*2)
+Integratorlength=ADClength+numpy.ceil(numpy.log2(IntegratorWindow+1))
 MDM_Development_Bench_Arch="""MDM Development Bench:
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Commands:                                                                                                 ___                                      //
@@ -45,7 +49,7 @@ MDM_Development_Bench_Arch="""MDM Development Bench:
 //  capture fire            : Capture 2048 samples from selected stream                                           Equal UART Pulse :    |_______|     //
 //  exit                    : Exit                                                                                                                    //
 //                                                                      set_upthreshold VALUE          set_downthreshold VALU                         //
-//                                                                                    {5:.1f} ====o    o==== {6:.1f}                                        //
+//                                                                                    {5:^4.1f} ====o    o==== {6:^4.1f}                                        //
 //                                                                                          ___|____|___                                              //
 //                                                                                         |            |   __                                        //
 //                      ___                                      ____________    __        |   Manual   |  |  \                                       //
@@ -101,8 +105,8 @@ def main():
     offset_value=0.0
     offset_mux='a'
     filter_mux='a'
-    upthreshold_value=27
-    downthreshold_value=13
+    upthreshold_value=218440*ADCPrecision
+    downthreshold_value=109220*ADCPrecision
     capture_mux='a'
     reset(' ')
     while 'true':
@@ -118,8 +122,8 @@ def main():
             offset_value=0.0
             offset_mux='a'
             filter_mux='a'
-            upthreshold_value=27
-            downthreshold_value=13
+            upthreshold_value=218440*ADCPrecision
+            downthreshold_value=109220*ADCPrecision
             capture_mux='a'
             clear()
             reset(argument)
@@ -163,7 +167,7 @@ def main():
                 downthreshold_value=val
         elif(command_type=="capture"):
             clear()
-            val=capture(argument)
+            val=capture(argument, capture_mux)
             if(val!='false' and val!='fire'):
                 capture_mux=val
         elif(command_type=="exit"):
@@ -217,10 +221,12 @@ def ask(argument):
 
 def set_offset(argument):
     if(0.0<=float(argument) and float(argument)<=Vmax):
-        serial_commander(portName, baudrateValue, int(3), int(72), int(14))
+        arg=num2world(float(argument)/ADCPrecision)
+        serial_commander(portName, baudrateValue, int(3), arg[0], arg[1])
+        argval=ADCPrecision*((2**8)*arg[0]+arg[1])
         print("set_offset", argument)
         print("Done successfully!")
-        return float(argument)
+        return float(argval)
     else:
         print("Command argument should be a float number in range: 0.0 <= argument and argument <=", Vmax, "!")
         print("Irregular command!")
@@ -264,28 +270,32 @@ def filter(argument):
         return 'false'
 
 def set_upthreshold(argument):
-    if(0.0<=float(argument) and float(argument)<=Vmax):
+    if(0.0<=float(argument) and float(argument)<= 20*Vmax):
+        arg=num2world(float(argument)/(8*ADCPrecision))
+        serial_commander(portName, baudrateValue, int(7), arg[0], arg[1])
+        argval=(8*ADCPrecision)*((2**8)*arg[0]+arg[1])
         print("set_upthreshold", argument)
-        serial_commander(portName, baudrateValue, int(7), int(112), int(114))
         print("Done successfully!")
-        return float(argument)
+        return float(argval)
     else:
-        print("Command argument should be a float number in range: 0.0 <= argument and argument <=", Vmax, "!")
+        print("Command argument should be a float number in range: 0.0 <= argument and argument <=", 20*Vmax, "!")
         print("Irregular command!")
         return 'false'
 
 def set_downthreshold(argument):
-    if(0.0<=float(argument) and float(argument)<=Vmax):
+    if(0.0<=float(argument) and float(argument)<= 20*Vmax):
+        arg=num2world(float(argument)/(8*ADCPrecision))
+        serial_commander(portName, baudrateValue, int(8), arg[0], arg[1])
+        argval=(8*ADCPrecision)*((2**8)*arg[0]+arg[1])
         print("set_downthreshold", argument)
-        serial_commander(portName, baudrateValue, int(8), int(112), int(114))
         print("Done successfully!")
-        return float(argument)
+        return float(argval)
     else:
-        print("Command argument should be a float number in range: 0.0 <= argument and argument <=", Vmax, "!")
+        print("Command argument should be a float number in range: 0.0 <= argument and argument <=", 20*Vmax, "!")
         print("Irregular command!")
         return 'false'
 
-def capture(argument):
+def capture(argument, capture_mux):
     if(argument=="a"):
         serial_commander(portName, baudrateValue, int(9), int(0), int(0))
         print("Manual Threshold ASK Detector")
@@ -319,7 +329,12 @@ def capture(argument):
     elif(argument=="fire"):
         print("capture fire")
         serial_commander(portName, baudrateValue, int(10), int(0), int(0))
-        fire_ploter(portName, baudrateValue, SampleNumber, ADCPrecision)
+        if(capture_mux=='a' and capture_mux=='b'):
+            fire_ploter(portName, baudrateValue, SampleNumber, 1)
+        elif(capture_mux=='c'):
+            fire_ploter(portName, baudrateValue, SampleNumber, 8*ADCPrecision)
+        else:
+            fire_ploter(portName, baudrateValue, SampleNumber, ADCPrecision)
         print("Done successfully!")
         return argument
     else:
@@ -398,5 +413,57 @@ def fire_ploter(port, baudrate, SampleNumber, Precision):
     plt.grid()
     plt.show()
 
+def num2world(argument):
+    if(0 <= float(argument) and float(argument) <= 65535):
+        arg1=int(float(argument)-(2**8)*numpy.floor(float(argument)/((2**8))))
+        arg0=int(numpy.floor(float(argument)/((2**8))))
+        return [arg0, arg1]
+    else:
+        print("Command argument should be a integer number in range: 0 <= argument and argument <= 65535 !")
+        print("Irregular command!")
+        return 'false'
+
 if __name__ == '__main__':
     main()
+
+'''
+// Default value calculation for upthreshold and downthreshold:
+// Maximum ADC output: (2**14)-1 = 16383
+// 
+//           _________           
+//          |         |          
+//          |    A    |          
+//          |         |           A = t = pi/a
+// ---------'         '----------
+//               _                     _                             
+//             ,' ',                  | t=pi/a                      | t=pi/a
+//            /  B  \                 |                             |
+//           /       \            B = | sin(at)dt = ((-1/a)cos(at)) | = (-1/a)( cos(pi)-cos(0) ) = 2/a
+// ---------'         '----------     |                             |
+//          0         t              _| t=0                         | t=0
+// 
+//               B                         
+// Area ratio = --- = (2/a)/(pi/a) = (2/pi) = 0.636619772  ~~  0.7
+//               A                         
+//
+//
+//                                                                               IntegratorWindow*16383         ____          
+//                                                                                                             /    \         
+//    16383      ____                                                                                         /      \        
+//              |    |                                                                                       /        \       
+//              |    |                                                                                      /          \      
+// If:    0 ----'    '----- reaches to the ADC than the integrator output become:                     0 ---'            '-----
+//              0    q             (Remember: 2*q=IntegratorWindow !)                                      0   q   2q   3q    
+//
+//
+//                              IntegratorWindow*16383            |                                                 
+//                                                                |                  ___                            
+//      upthreshold = (2/3)*0.7*IntegratorWindow*16383   ,---->---|                 /   |  __     ___               
+//                                                       |        |                /    ',/  |  _/   \_             
+//                                                       |        |              /`           \/       \       /\   
+//    downthreshold = (1/3)*0.7*IntegratorWindow*16383   |----<---'   ~ /\/^'~'\/                       \ /^\ /  \_~
+//                                                       |             ^              An awful pulse!    '   ^      
+//                                                   0   |                            __________________            
+//                                                       0        1   _______________|                  |___________
+//
+'''

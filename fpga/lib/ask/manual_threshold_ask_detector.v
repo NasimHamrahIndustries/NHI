@@ -17,13 +17,13 @@ module manual_threshold_ask_detector #(
    // state == 1'b0 : Low state    //    upthreshold  ,--->---|                 /   |  __     ___               
    // state == 1'b1 : High state   //                 |       |                /    ',/  |  _/   \_             
    always @(posedge clk)           //                 |       |              /`           \/       \       /\   
-      if(reset | clear)            //  downthreshold  |---<---'   __/\/^'~'\/                       \_|^\_/  \__
-         state <= 1'b0;            //                 |                           __________________            
+      if(reset | clear)            //  downthreshold  |---<---'   ~ /\/^'~'\/                       \ /^\ /  \_~
+         state <= 1'b0;            //                 |            ^              __________________ '   ^      
       else if(i_tvalid & enable)   //                 0       1   _______________|                  |___________
          case (state)
-            1'b0    : if( $signed(i_tdata) > $signed(upthreshold)   ) state <= 1'b1;
-            1'b1    : if( $signed(i_tdata) < $signed(downthreshold) ) state <= 1'b0;
-            default :                                                 state <= 1'b0;
+            1'b0    : if( $signed(i_tdata) => $signed(upthreshold)   ) state <= 1'b1;
+            1'b1    : if( $signed(i_tdata) =< $signed(downthreshold) ) state <= 1'b0;
+            default :                                                  state <= 1'b0;
          endcase
 
    assign i_tready = enable;

@@ -93,8 +93,8 @@ module MDM_Development_Bench #(
    reg        cal_offset          = 1'b0;
    reg [7:0]  offset_mux          = 8'd0;
    reg [7:0]  filter_mux          = 8'd0;
-   reg [15:0] upthreshold_value   = 16'h5555;
-   reg [15:0] downthreshold_value = 16'h2aaa;
+   reg [15:0] upthreshold_value   = 16'h3554;
+   reg [15:0] downthreshold_value = 16'h1aaa;
    reg [7:0]  capture_mux         = 8'd0;
    reg        capture_fire        = 1'b0;
    always @(posedge CLOCK)
@@ -107,8 +107,8 @@ module MDM_Development_Bench #(
             cal_offset          <= 1'b0;
             offset_mux          <= 8'd0;
             filter_mux          <= 8'd0;
-            upthreshold_value   <= 16'h5555;
-            downthreshold_value <= 16'h2aaa;
+            upthreshold_value   <= 16'h3554;
+            downthreshold_value <= 16'h1aaa;
             capture_mux         <= 8'd0;
             capture_fire        <= 1'b0;
          end
@@ -141,8 +141,8 @@ module MDM_Development_Bench #(
             2'b10 : begin
                   case (cmd)
                      8'h00 : cmd_rst      <= 1'b0;
-                     8'h02 : cal_offset   <= 1'b0;
-                     8'h06 : capture_fire <= 1'b0;
+                     8'h04 : cal_offset   <= 1'b0;
+                     8'h0A : capture_fire <= 1'b0;
                   endcase
                   command_state <= 2'b00;
                end
@@ -203,7 +203,7 @@ module MDM_Development_Bench #(
    wire i_Integrator1_valid, i_Integrator1_ready;
    wire [LTC2312_precision+$clog2(Integrator_SIZE+1):0] o_Integrator1_date;
    wire o_Integrator1_valid, o_Integrator1_ready;
-   DirectBoundedIntegrator #(
+   /*DirectBoundedIntegrator #(
       .WIDTH(LTC2312_precision+1),
       .SIZE(Integrator_SIZE)
    ) DirectBoundedIntegrator (
@@ -214,7 +214,7 @@ module MDM_Development_Bench #(
       .o_tdata(o_Integrator1_date),
       .o_tvalid(o_Integrator1_valid),
       .o_tready(o_Integrator1_ready)
-   );
+   );*/
    assign i_Integrator1_date = {1'b0, LTC2312_tdata};
    assign i_Integrator1_valid = LTC2312_tvalid;
    //assign  = (  ? i_Integrator1_ready : i_Integrator0_ready );
@@ -292,8 +292,8 @@ module MDM_Development_Bench #(
                   FIFO_WE   <= ask_rx_tvalid;
                end
             8'h01     : begin // Automatic Threshold ASK Detector
-                  FIFO_DATA <= {8'h00, ask_rx_tdata};
-                  FIFO_WE   <= ask_rx_tvalid;
+                  FIFO_DATA <= {15'd0, ask_manual_rx};
+                  FIFO_WE   <= i_manual_valid;
                end
             8'h02     : begin // Filter Integrator
                   FIFO_DATA <= i_manual_date[LTC2312_precision+$clog2(Integrator_SIZE+1)-1:LTC2312_precision+$clog2(Integrator_SIZE+1)-16+1-1];
