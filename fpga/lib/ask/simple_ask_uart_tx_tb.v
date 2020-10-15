@@ -153,29 +153,51 @@ module simple_ask_uart_tx_tb #(
       .o_tready(1'b1)
    );
 
-   wire rx;
+   wire rx0;
    manual_threshold_ask_detector #(
       .WIDTH(ask_tx_length_model+$clog2(SIZE+1)-1)
    ) manual_threshold_ask_detector (
       .clk(clk), .reset(rst), .clear(1'b0), .enable(1'b1),
       .i_tdata(DirectBoundedIntegratorOut), .i_tvalid(DirectBoundedIntegratorOut_valid), .i_tready(),
       .upthreshold($signed(501)), .downthreshold($signed(139)),
-      .rx(rx)
+      .rx(rx0)
+   );
+   wire rx1;
+   automatic_threshold_ask_detector #(
+      .WIDTH(ask_tx_length_model+$clog2(SIZE+1)-1),
+      .DEPTH(8)
+   ) automatic_threshold_ask_detector (
+      .clk(clk), .reset(rst), .clear(1'b0), .enable(1'b1),
+      .i_tdata(DirectBoundedIntegratorOut), .i_tvalid(DirectBoundedIntegratorOut_valid), .i_tready(),
+      .rx(rx1)
    );
 
    // UART RX
-   wire [7:0] o_tdata;
+   wire [7:0] o_tdata0;
    axis_uart_rx_wrapper #(
       .RX_SIZE(RX_SIZE),
       .clkdiv_rx(clkdiv)
-   ) axis_uart_rx_wrapper (
+   ) axis_uart_rx_wrapper0 (
       .clk(clk), .rst(rst),
       // AXI Stream ports
-      .o_tdata(o_tdata),
+      .o_tdata(o_tdata0),
       .o_tvalid(),
       .o_tready(1'b1),
       // Input RX port
-      .rx(rx)
+      .rx(rx0)
+   );
+   wire [7:0] o_tdata1;
+   axis_uart_rx_wrapper #(
+      .RX_SIZE(RX_SIZE),
+      .clkdiv_rx(clkdiv)
+   ) axis_uart_rx_wrapper1 (
+      .clk(clk), .rst(rst),
+      // AXI Stream ports
+      .o_tdata(o_tdata1),
+      .o_tvalid(),
+      .o_tready(1'b1),
+      // Input RX port
+      .rx(rx1)
    );
 
 endmodule // simple_ask_uart_tx_tb
