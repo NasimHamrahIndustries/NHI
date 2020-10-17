@@ -33,7 +33,7 @@ module automatic_threshold_ask_detector #(
          if( $signed(counter) == -1 ) begin
             maximum <= 0;
             upthreshold   <= (upthreshold > MINTHRESHOLD ? 2*($signed(maximum)/3) : MINTHRESHOLD);
-            downthreshold <= (upthreshold > MINTHRESHOLD ? $signed(maximum)/3     : MINTHRESHOLD);
+            downthreshold <= (upthreshold > MINTHRESHOLD ? $signed(maximum)/4     : MINTHRESHOLD);
          end else if( $signed(maximum) < $signed(i_tdata) )
             maximum <= i_tdata;
       end

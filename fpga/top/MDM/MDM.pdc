@@ -1,0 +1,81 @@
+# Physical Design Constraints PDC file for the MDM board
+# FPGA:	A3P125-VQ100-GRADE1, Part Number: A3P125-1VQ100T1
+# ADC:   LTC2312-14
+
+# Clock pin
+set_io CLOCK \
+   -pinname 65 \
+   -fixed yes \
+   -DIRECTION Input \
+   -iostd LVCMOS33;     # 4MHz or 8MHz on-board clock
+
+#set_io RESET_N
+#   -pinname 30 \
+#   -fixed yes \
+#   -DIRECTION Input \
+#   -iostd LVCMOS33;    # active-low MAX809TTRG
+
+# USB<->UART Pins
+set_io UART_TX \
+   -pinname 58 \
+   -fixed yes \
+   -DIRECTION Output \
+   -iostd LVCMOS33;     # DBG TxD
+
+set_io UART_RX \
+   -pinname 57 \
+   -fixed yes \
+   -DIRECTION Input \
+   -iostd LVCMOS33;     # DBG RxD
+
+# MCU<->UART Pins
+set_io MDM_TxD \
+   -pinname 60 \
+   -fixed yes \
+   -DIRECTION Output \
+   -iostd LVCMOS33;     # MCU TxD
+
+set_io MDM_RxD \
+   -pinname 59 \
+   -fixed yes \
+   -DIRECTION Input \
+   -iostd LVCMOS33;     # MCU RxD
+
+# Intermediate Frequency Modulation
+set_io MULP \
+   -pinname 5 \
+   -fixed yes \
+   -DIRECTION Output \
+   -iostd LVCMOS33;     # MULP
+
+set_io MULN \
+   -pinname 6 \
+   -fixed yes \
+   -DIRECTION Output \
+   -iostd LVCMOS33;     # MULN
+
+# LTC2312 Analog to Digital Converter
+set_io AFE_SDO \
+   -pinname 28 \
+   -fixed yes \
+   -DIRECTION Input \
+   -iostd LVCMOS33;     # AFE_SDO
+
+set_io AFE_SCK \
+   -pinname 27 \
+   -fixed yes \
+   -DIRECTION Output \
+   -iostd LVCMOS33;     # AFE_SCK
+
+set_io AFE_CONV \
+   -pinname 26 \
+   -fixed yes \
+   -DIRECTION Output \
+   -iostd LVCMOS33;     # MAFE_CONV
+
+# LED Pin
+set_io LED \
+   -pinname 7 \
+   -fixed yes \
+   -DIRECTION Output \
+   -iostd LVCMOS33;     # LED
