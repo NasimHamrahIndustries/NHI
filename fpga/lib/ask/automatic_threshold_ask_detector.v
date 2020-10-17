@@ -38,14 +38,36 @@ module automatic_threshold_ask_detector #(
             maximum <= i_tdata;
       end
 
+   wire [WIDTH-1:0] dataout;
    genvar i;
    generate
-      for(i=1;i<2**DEPTH;i=i+1)
+      if(WIDTH==32 & DEPTH==10) begin
+         reg [9:0] ADDR = 0;
          always @(posedge clk)
             if(reset | clear)
-               delaied[i] <= 0;
+               ADDR <= 0;
             else if(i_tvalid & enable)
-               delaied[i] <= delaied[i-1];
+               ADDR <= ADDR +1;
+         RAMCoreTP_4B_1024 RAMCoreTP_4B_1024 (
+            .WD(delaied[0]),
+            .RD(dataout),
+            .WEN(i_tvalid & enable),
+            .REN(i_tvalid & enable),
+            .WADDR(ADDR),
+            .RADDR(ADDR+1),
+            .RWCLK(clk),
+            .RESET(reset | clear)
+         );
+      end else begin
+         for(i=1;i<2**DEPTH;i=i+1) begin
+            always @(posedge clk)
+               if(reset | clear)
+                  delaied[i] <= 0;
+               else if(i_tvalid & enable)
+                  delaied[i] <= delaied[i-1];
+         end
+         assign dataout = delaied[(2**DEPTH)-1];
+      end
    endgenerate
 
    reg state = 1'b0;               //                         |                  ___                            
@@ -56,9 +78,9 @@ module automatic_threshold_ask_detector #(
          state <= 1'b0;            //                 |            ^              __________________ '   ^      
       else if(i_tvalid & enable)   //                 0       1   _______________|                  |___________
          case (state)
-            1'b0    : if( $signed(delaied[2**DEPTH-1]) > $signed(upthreshold)   ) state <= 1'b1;
-            1'b1    : if( $signed(delaied[2**DEPTH-1]) < $signed(downthreshold) ) state <= 1'b0;
-            default :                                                             state <= 1'b0;
+            1'b0    : if( $signed(dataout) > $signed(upthreshold)   ) state <= 1'b1;
+            1'b1    : if( $signed(dataout) < $signed(downthreshold) ) state <= 1'b0;
+            default :                                                 state <= 1'b0;
          endcase
 
    assign i_tready = enable;

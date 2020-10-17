@@ -15,6 +15,8 @@ module MDM_Development_Bench #(
    input CLOCK, //input RESET_N,
    // USB<->UART Pins
    output UART_TX, input UART_RX,
+   // MCU<->UART Pins
+   //output MDM_TxD, input MDM_RxD,
    // Intermediate Frequency Modulation
    output MULP, output MULN,
    // LTC2312 Analog to Digital Converter
@@ -48,11 +50,11 @@ module MDM_Development_Bench #(
       .clkdiv_rx(UART_clkdiv_rx)
    ) axis_uart_rx_wrapper (      //                                  |             |             |             |             |
       .clk(CLOCK), .rst(rst),    //             ______  data         |   ______    |   ______    |   ______    |   ______    |
-      // AXI Stream ports        //            |      |==>===========O==|      |=>=O==|      |=>=O==|      |=>=O==|      |=>=O
+      // AXI Stream ports        //            |      |==>===========O==|      |=>=O==|      |=>=O==|      |=>=O==|      |=>=o
       .o_tdata(rx_tdata),        //            | UART | valid           | reg3 |      | reg2 |      | reg1 |      | reg0 |    
-      .o_tvalid(rx_tvalid),      // UART_RX -->| 125  |-->-----------O--|      |   O--|      |   O--|      |   O--|      |    
+      .o_tvalid(rx_tvalid),      // UART_RX -->| 125  |-->-----------O--|      |   o--|      |   o--|      |   o--|      |    
       .o_tready(rx_tready),      //            | kb/s | ready        |  |______|   |  |______|   |  |______|   |  |______|    
-      // Input RX port           //            |______|--<-- 1'b1    O->-----------O->-----------O->-----------O              
+      // Input RX port           //            |______|--<-- 1'b1    o->-----------O->-----------O->-----------o              
       .rx(UART_RX)               //                                                                                           
    );
    // Receiver registers

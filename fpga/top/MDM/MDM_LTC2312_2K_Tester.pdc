@@ -28,6 +28,19 @@ set_io UART_RX \
    -DIRECTION Input \
    -iostd LVCMOS33;     # DBG RxD
 
+# MCU<->UART Pins
+#set_io MDM_TxD \
+   -pinname 60 \
+   -fixed yes \
+   -DIRECTION Output \
+   -iostd LVCMOS33;     # MCU TxD
+
+#set_io MDM_RxD \
+   -pinname 59 \
+   -fixed yes \
+   -DIRECTION Input \
+   -iostd LVCMOS33;     # MCU RxD
+
 # Intermediate Frequency Modulation
 set_io MULP \
    -pinname 5 \
