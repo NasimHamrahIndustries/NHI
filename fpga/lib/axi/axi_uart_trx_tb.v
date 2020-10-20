@@ -111,7 +111,7 @@ module axi_uart_trx_tb #(
       .SIZE(RX_SIZE)
    ) axi_uart_rx (
       .clk(clk), .rst(rst),
-      .o_tdata({o_tdata, parity}), .o_tvalid(o_tvalid), .o_tready(1'b1),
+      .o_tdata({parity, o_tdata}), .o_tvalid(o_tvalid), .o_tready(1'b1),
       .parity_enable(1'b0), .fifo_level(),
       .clkdiv(clkdiv_rx), .rx(axi_tx)
    );
@@ -122,7 +122,7 @@ module axi_uart_trx_tb #(
       .SIZE(RX_SIZE)
    ) axi_uart_rx1 (
       .clk(clk), .rst(rst),
-      .o_tdata({o_tdata1, parity1}), .o_tvalid(o_tvalid1), .o_tready(1'b1),
+      .o_tdata({parity1, o_tdata1}), .o_tvalid(o_tvalid1), .o_tready(1'b1),
       .parity_enable(1'b1), .fifo_level(),
       .clkdiv(clkdiv_rx), .rx(axi_tx1)
    );
@@ -133,7 +133,7 @@ module axi_uart_trx_tb #(
       .SIZE(RX_SIZE)
    ) axi_uart_rx2 (
       .clk(clk), .rst(rst),
-      .o_tdata({o_tdata2, parity2}), .o_tvalid(o_tvalid2), .o_tready(1'b1),
+      .o_tdata({parity2, o_tdata2}), .o_tvalid(o_tvalid2), .o_tready(1'b1),
       .parity_enable(1'b1), .fifo_level(),
       .clkdiv(clkdiv_rx), .rx(axi_tx2)
    );

@@ -6,6 +6,7 @@
 # AXI Sources
 ##################################################
 AXI_SRCS = $(abspath $(addprefix $(BASE_DIR)/../lib/axi/, \
+axi_parity_error_detection.v \
 axi_uart_rx.v \
 axi_uart_trx_tb.v \
 axi_uart_tx.v \
