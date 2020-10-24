@@ -17,6 +17,8 @@ module MDM #(
    output UART_TX, input UART_RX,
    // MCU<->UART Pins
    output MDM_TxD, input MDM_RxD,
+   // MCU<->SPI Pins
+   input MDM_CS, //output MDM_SDO,  input MDM_SDI, input MDM_SCK,
    // Intermediate Frequency Modulation
    output MULP, output MULN,
    // LTC2312 Analog to Digital Converter
@@ -172,6 +174,6 @@ module MDM #(
    assign LED = ~ask_manual_rx;
    //assign LED = ~ask_automatic_rx;
    assign UART_TX = MDM_RxD;
-   assign MDM_TxD = UART_RX & MDM_Tx;
+   assign MDM_TxD = UART_RX & (MDM_Tx | MDM_CS);
 
 endmodule // MDM

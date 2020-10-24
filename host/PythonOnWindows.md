@@ -5,8 +5,8 @@ https://pip.pypa.io/en/stable/installing/
 For get "Build Tools for Visual Studio":
 https://visualstudio.microsoft.com/downloads/
 
-pip install serial
-pip install numpy
-pip install matplotlib
+python -m pip install serial
+python -m pip install numpy
+python -m pip install matplotlib
 
 python ./MDM_Developmrnt_Bench.py
