@@ -9,25 +9,30 @@ module MDM #(
    parameter uart_rate = 125000,           // bit per second
    parameter ask_rate = 5000,              // bit per second
    parameter LTC2312_sample_rate = 200000, // sample per second
-   parameter LTC2312_precision = 14        // output bit length
+   parameter LTC2312_precision = 14,       // output bit length
+   parameter upthresholdval = 24000,       // up threshold value
+   parameter downthresholdval = 8000       // down threshold value
 )(
    // Clock and Reset Pins
    input CLOCK, //input RESET_N,
    // USB<->UART Pins
    output UART_TX, input UART_RX,
    // MCU<->UART Pins
-   output MDM_TxD, input MDM_RxD,
+   //output MDM_TxD, input MDM_RxD,
    // MCU<->SPI Pins
-   input MDM_CS, //output MDM_SDO,  input MDM_SDI, input MDM_SCK,
+   //input MDM_CS, output MDM_SDO,  input MDM_SDI, input MDM_SCK,
    // Intermediate Frequency Modulation
    output MULP, output MULN,
    // LTC2312 Analog to Digital Converter
    input AFE_SDO, output AFE_SCK, output AFE_CONV,
    // LED Pin
-   output LED
+   output LED//,
+   // General Purpose Input Output Pins
+   //output GPIO0, output GPIO1, output GPIO2, output GPIO3, output GPIO4
 );
 
    wire rst;
+   wire ask_tx_busy;
    por_gen por_gen (
       .clk(CLOCK),
       .reset_out(rst)
@@ -66,16 +71,16 @@ module MDM #(
       .i_tdata(i_Integrator_date), .i_tvalid(i_Integrator_valid), .i_tready(),
       .o_tdata(o_Integrator_date), .o_tvalid(o_Integrator_valid), .o_tready(o_Integrator_ready)
    );
-   assign i_Integrator_date = {1'b0, LTC2312_tdata};
+   assign i_Integrator_date = ( ask_tx_busy==1'b1 ? 0 : {1'b0, LTC2312_tdata} );
    assign i_Integrator_valid = LTC2312_tvalid;
    //Threshold ASK Detector
    //Manual Threshold
-   /*reg [LTC2312_precision+$clog2(Integrator_SIZE+1):0] upthreshold   = $unsigned(24000);
-   reg [LTC2312_precision+$clog2(Integrator_SIZE+1):0] downthreshold = $unsigned(8000);
+   /*reg [LTC2312_precision+$clog2(Integrator_SIZE+1):0] upthreshold   = $unsigned(upthresholdval);
+   reg [LTC2312_precision+$clog2(Integrator_SIZE+1):0] downthreshold = $unsigned(downthresholdval);
    always @(posedge CLOCK)
       if(rst) begin
-         upthreshold   <= $unsigned(24000);
-         downthreshold <= $unsigned(8000);
+         upthreshold   <= $unsigned(upthresholdval);
+         downthreshold <= $unsigned(downthresholdval);
       end*/
    wire ask_manual_rx;
    manual_threshold_ask_detector #(
@@ -83,7 +88,7 @@ module MDM #(
    ) manual_threshold_ask_detector (
       .clk(CLOCK), .reset(rst), .clear(1'b0), .enable(1'b1),
       .i_tdata(o_Integrator_date), .i_tvalid(o_Integrator_valid), .i_tready(o_Integrator_ready),
-      .upthreshold($unsigned(24000)), .downthreshold($unsigned(8000)),
+      .upthreshold($unsigned(upthresholdval)), .downthreshold($unsigned(downthresholdval)),
       .rx(ask_manual_rx)
    );
    //automatic Threshold
@@ -125,7 +130,7 @@ module MDM #(
       // AXI Stream ports
       .i_tdata(ask_rx_tdata), .i_tvalid(ask_rx_tvalid), .i_tready(ask_rx_tready),
       // Output TX port
-      .tx(MDM_Tx)
+      .tx(UART_TX)
    );
    ////////////////////////////////
    //
@@ -145,7 +150,7 @@ module MDM #(
       // AXI Stream ports
       .o_tdata(mcu_rx_tdata), .o_tvalid(mcu_rx_tvalid), .o_tready(mcu_rx_tready),
       // Input RX port
-      .rx(MDM_RxD)
+      .rx(UART_RX)
    );
    // ASK TX
    localparam ASK_TX_SIZE = 1;
@@ -161,7 +166,7 @@ module MDM #(
       // AXI Stream ports
       .i_tdata(mcu_rx_tdata), .i_tvalid(mcu_rx_tvalid), .i_tready(mcu_rx_tready),
       // ASK output port
-      .ask_tx(ask_tx)
+      .ask_tx(ask_tx), .busy(ask_tx_busy)
    );
    // ASK output preparation
    assign MULP = ( ask_tx==2'b01 ? 1'b1 : 1'b0 );
@@ -173,7 +178,5 @@ module MDM #(
    ////////////////////////////////
    assign LED = ~ask_manual_rx;
    //assign LED = ~ask_automatic_rx;
-   assign UART_TX = MDM_RxD;
-   assign MDM_TxD = UART_RX & (MDM_Tx | MDM_CS);
 
 endmodule // MDM

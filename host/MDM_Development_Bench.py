@@ -280,7 +280,7 @@ def set_upthreshold(argument):
         arg=num2world(float(argument)/(8*ADCPrecision))
         serial_commander(portName, baudrateValue, int(7), arg[0], arg[1])
         argval=(8*ADCPrecision)*((2**8)*arg[0]+arg[1])
-        print("set_upthreshold", argument)
+        print("set_upthreshold", argument, "     It equal:", float(argument)/(ADCPrecision))
         print("Done successfully!")
         return float(argval)
     else:
@@ -293,7 +293,7 @@ def set_downthreshold(argument):
         arg=num2world(float(argument)/(8*ADCPrecision))
         serial_commander(portName, baudrateValue, int(8), arg[0], arg[1])
         argval=(8*ADCPrecision)*((2**8)*arg[0]+arg[1])
-        print("set_downthreshold", argument)
+        print("set_downthreshold", argument, "     It equal:", float(argument)/(ADCPrecision))
         print("Done successfully!")
         return float(argval)
     else:

@@ -30,24 +30,24 @@ set_io UART_RX \
    -iostd LVCMOS33;     # DBG RxD
 
 # MCU<->UART Pins
-set_io MDM_TxD \
-   -pinname 60 \
-   -fixed yes \
-   -DIRECTION Output \
-   -iostd LVCMOS33;     # MCU TxD
+#set_io MDM_TxD \
+#   -pinname 60 \
+#   -fixed yes \
+#   -DIRECTION Output \
+#   -iostd LVCMOS33;     # MCU TxD
 
-set_io MDM_RxD \
-   -pinname 59 \
-   -fixed yes \
-   -DIRECTION Input \
-   -iostd LVCMOS33;     # MCU RxD
+#set_io MDM_RxD \
+#   -pinname 59 \
+#   -fixed yes \
+#   -DIRECTION Input \
+#   -iostd LVCMOS33;     # MCU RxD
 
 # MCU<->SPI Pins
-set_io MDM_CS \
-   -pinname 64 \
-   -fixed yes \
-   -DIRECTION Input \
-   -iostd LVCMOS33;     # MDM CS
+#set_io MDM_CS \
+#   -pinname 64 \
+#   -fixed yes \
+#   -DIRECTION Input \
+#   -iostd LVCMOS33;     # MDM CS
 
 #set_io MDM_SDO
 #   -pinname 63 \
@@ -105,3 +105,34 @@ set_io LED \
    -fixed yes \
    -DIRECTION Output \
    -iostd LVCMOS33;     # LED
+
+# General Purpose Input Output Pins
+#set_io GPIO0 \
+#   -pinname 100 \
+#   -fixed yes \
+#   -DIRECTION Output \
+#   -iostd LVCMOS33;     # GPIO0
+
+#set_io GPIO1 \
+#   -pinname 99 \
+#   -fixed yes \
+#   -DIRECTION Output \
+#   -iostd LVCMOS33;     # GPIO1
+
+#set_io GPIO2 \
+#   -pinname 98 \
+#   -fixed yes \
+#   -DIRECTION Output \
+#   -iostd LVCMOS33;     # GPIO2
+
+#set_io GPIO3 \
+#   -pinname 97 \
+#   -fixed yes \
+#   -DIRECTION Output \
+#   -iostd LVCMOS33;     # GPIO3
+
+#set_io GPIO4 \
+#   -pinname 96 \
+#   -fixed yes \
+#   -DIRECTION Output \
+#   -iostd LVCMOS33;     # GPIO4

@@ -16,7 +16,7 @@ module axis_ask_uart_tx_wrapper #(
    input i_tvalid,
    output i_tready,
    // ASK output port
-   output [ask_tx_length-1:0] ask_tx
+   output [ask_tx_length-1:0] ask_tx, output busy
 );
    wire [7:0] fifo_in = i_tdata;
    wire fifo_write = i_tvalid;
@@ -32,7 +32,7 @@ module axis_ask_uart_tx_wrapper #(
       ) ask_uart_tx (
          .clk(clk), .rst(rst),
          .fifo_in(fifo_in), .fifo_write(fifo_write), .fifo_level(fifo_level_tx), .fifo_full(fifo_full), 
-         .clkdiv(clkdiv), .baudclk(baudclk), .ask_tx(ask_tx)
+         .clkdiv(clkdiv), .baudclk(baudclk), .ask_tx(ask_tx), .busy(busy)
       );
    else if(ask_core_type=="model")
       model_ask_uart_tx #(
@@ -41,7 +41,7 @@ module axis_ask_uart_tx_wrapper #(
       ) ask_uart_tx (
          .clk(clk), .rst(rst),
          .fifo_in(fifo_in), .fifo_write(fifo_write), .fifo_level(fifo_level_tx), .fifo_full(fifo_full), 
-         .clkdiv(clkdiv), .baudclk(baudclk), .ask_tx(ask_tx)
+         .clkdiv(clkdiv), .baudclk(baudclk), .ask_tx(ask_tx), .busy(busy)
       );
    endgenerate
    assign i_tready = ~fifo_full;

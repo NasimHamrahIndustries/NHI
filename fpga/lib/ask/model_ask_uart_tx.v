@@ -11,7 +11,7 @@ module model_ask_uart_tx
       parameter SIZE=0)
     (input clk, input rst,
      input [7:0] fifo_in, input fifo_write, output [15:0] fifo_level, output fifo_full, 
-     input [15:0] clkdiv, output baudclk, output reg [ask_tx_length-1:0] ask_tx);
+     input [15:0] clkdiv, output baudclk, output reg [ask_tx_length-1:0] ask_tx, output busy);
 
    reg tx;
    reg [15:0] 	  baud_ctr;
@@ -79,5 +79,7 @@ module model_ask_uart_tx
        ask_tx <= $rtoi($floor($pow(2.0,ask_tx_length-1)*$sin(4*3.14*($itor(baud_ctr_reg)-1.0)/($itor(clkdiv)))));
      else
        ask_tx <= 0;
+
+   assign busy = ( bit_ctr==0 ? 1'b0 : 1'b1 );
 
 endmodule // model_ask_uart_tx
